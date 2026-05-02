@@ -6,134 +6,73 @@
   <title>🐼 Panda Bambú</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; touch-action: manipulation; }
-
     body {
       background: #0d1f0d;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
       min-height: 100vh;
       font-family: 'Courier New', monospace;
       overflow: hidden;
     }
-
     #gameWrapper {
-      background: #1a3a1a;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 2px solid #2d5a2d;
-      width: 100%;
-      max-width: 640px;
+      background: #1a3a1a; border-radius: 12px;
+      overflow: hidden; border: 2px solid #2d5a2d;
+      width: 100%; max-width: 640px;
     }
-
     #hud {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 12px;
-      background: #0d1f0d;
-      color: #7dff7d;
-      font-size: 13px;
-      font-weight: bold;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 12px; background: #0d1f0d;
+      color: #7dff7d; font-size: 13px; font-weight: bold;
       border-bottom: 2px solid #2d5a2d;
     }
-
-    #gameArea {
-      position: relative;
-      width: 100%;
-    }
-
-    #gameCanvas {
-      display: block;
-      width: 100%;
-      height: auto;
-      image-rendering: pixelated;
-    }
-
+    #gameArea { position: relative; width: 100%; }
+    #gameCanvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
     #overlay {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.80);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: white;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; color: white;
     }
-
     #overlay h2 { font-size: 26px; color: #7dff7d; margin-bottom: 8px; }
     #overlay p  { font-size: 13px; color: #ccc; margin-bottom: 18px; text-align: center; line-height: 1.6; }
-
     .btn-play {
-      background: #2d7a2d;
-      color: white;
-      border: 2px solid #7dff7d;
-      padding: 10px 30px;
-      font-size: 16px;
-      font-family: 'Courier New', monospace;
-      cursor: pointer;
-      border-radius: 8px;
-      transition: background 0.15s;
+      background: #2d7a2d; color: white;
+      border: 2px solid #7dff7d; padding: 10px 30px;
+      font-size: 16px; font-family: 'Courier New', monospace;
+      cursor: pointer; border-radius: 8px; transition: background 0.15s;
     }
     .btn-play:hover, .btn-play:active { background: #3d9a3d; }
-
-    /* Mobile controls */
     #controls {
-      display: none;
-      background: #0d1f0d;
-      padding: 10px 16px;
-      border-top: 2px solid #2d5a2d;
+      display: none; background: #0d1f0d;
+      padding: 10px 16px; border-top: 2px solid #2d5a2d;
     }
-
     #controls.visible { display: flex; justify-content: space-between; align-items: center; }
-
-    .dpad {
-      display: grid;
-      grid-template-columns: 44px 44px;
-      gap: 6px;
-    }
-
+    .dpad { display: grid; grid-template-columns: 44px 44px; gap: 6px; }
     .ctrl-btn {
-      background: #1e4d1e;
-      border: 2px solid #4CAF50;
-      border-radius: 8px;
-      color: #7dff7d;
-      font-size: 20px;
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-      transition: background 0.1s;
+      background: #1e4d1e; border: 2px solid #4CAF50;
+      border-radius: 8px; color: #7dff7d; font-size: 20px;
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      user-select: none; transition: background 0.1s;
     }
-
     .ctrl-btn:active, .ctrl-btn.pressed { background: #3d9a3d; }
-
     .jump-btn {
-      background: #1e3a6e;
-      border: 2px solid #42A5F5;
-      color: #90CAF9;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      font-size: 26px;
+      background: #1e3a6e; border: 2px solid #42A5F5;
+      color: #90CAF9; width: 60px; height: 60px;
+      border-radius: 50%; font-size: 26px;
     }
-
     .jump-btn:active, .jump-btn.pressed { background: #1565C0; }
-
     #msg {
-      text-align: center;
-      padding: 5px;
-      background: #0d1f0d;
-      color: #4CAF50;
-      font-size: 11px;
-      border-top: 2px solid #2d5a2d;
+      text-align: center; padding: 5px;
+      background: #0d1f0d; color: #4CAF50;
+      font-size: 11px; border-top: 2px solid #2d5a2d;
     }
-
+    #levelBadge {
+      font-size: 12px; font-weight: bold;
+      padding: 2px 8px; border-radius: 4px;
+      background: #2d5a2d; color: #7dff7d;
+    }
     @media (max-width: 640px) {
       #gameWrapper { border-radius: 0; border-left: none; border-right: none; }
       body { justify-content: flex-start; }
@@ -142,15 +81,14 @@
   </style>
 </head>
 <body>
-
 <div id="gameWrapper">
   <div id="hud">
     <span>🐼 PANDA BAMBÚ</span>
+    <span id="levelBadge">NIVEL 1</span>
     <span id="score">🎋 0</span>
     <span id="lives">❤️ 3</span>
     <span id="timer">⏱ 60</span>
   </div>
-
   <div id="gameArea">
     <canvas id="gameCanvas" width="640" height="320"></canvas>
     <div id="overlay">
@@ -159,7 +97,6 @@
       <button class="btn-play" id="startBtn">JUGAR</button>
     </div>
   </div>
-
   <div id="controls">
     <div class="dpad">
       <div class="ctrl-btn" id="btnLeft">◀</div>
@@ -167,7 +104,6 @@
     </div>
     <div class="ctrl-btn jump-btn" id="btnJump">↑</div>
   </div>
-
   <div id="msg">← → Mover &nbsp;|&nbsp; ↑ / Z Saltar &nbsp;|&nbsp; Pisa enemigos desde arriba</div>
 </div>
 
@@ -178,6 +114,7 @@ const overlay = document.getElementById('overlay');
 const scoreEl = document.getElementById('score');
 const livesEl = document.getElementById('lives');
 const timerEl = document.getElementById('timer');
+const levelBadgeEl = document.getElementById('levelBadge');
 const controlsDiv = document.getElementById('controls');
 
 const W = 640, H = 320;
@@ -192,33 +129,32 @@ let touch = { left: false, right: false, jump: false };
 let score, lives, timeLeft, timerInterval, animFrame;
 let camera = { x: 0 };
 let invincible = 0;
+let currentLevel = 1;
 let level, player;
+let seeds = []; // projectiles from shooter enemy
+let particles = [];
 
-// ─── Detect mobile ───────────────────────────────────
 function isMobile() {
   return /Android|iPhone|iPad|iPod|Touch/i.test(navigator.userAgent) || window.innerWidth < 640;
 }
 
-// ─── Level builder ───────────────────────────────────
-const MAP_W = 30;
-
-function buildLevel() {
+// ─── LEVEL 1 ───────────────────────────────────────────
+const MAP_W1 = 30;
+function buildLevel1() {
   const platforms = [];
   const bamboos = [];
   const enemies = [];
 
-  for (let x = 0; x < MAP_W; x++) {
+  for (let x = 0; x < MAP_W1; x++)
     platforms.push({ x: x * TILE, y: 9 * TILE, w: TILE, h: TILE * 2, type: 'ground' });
-  }
 
   const plats = [
-    [3, 6, 3], [7, 5, 2], [11, 6, 3], [15, 4, 2],
-    [19, 6, 2], [23, 5, 3], [26, 6, 2]
+    [3,6,3],[7,5,2],[11,6,3],[15,4,2],
+    [19,6,2],[23,5,3],[26,6,2]
   ];
-  plats.forEach(([col, row, len]) => {
-    for (let i = 0; i < len; i++) {
-      platforms.push({ x: (col + i) * TILE, y: row * TILE, w: TILE, h: TILE / 2, type: 'platform' });
-    }
+  plats.forEach(([col,row,len]) => {
+    for (let i = 0; i < len; i++)
+      platforms.push({ x:(col+i)*TILE, y:row*TILE, w:TILE, h:TILE/2, type:'platform' });
   });
 
   const bpos = [
@@ -226,40 +162,110 @@ function buildLevel() {
     [3,5],[7,5],[15,3],[16,3],[19,8],[20,8],[23,4],[24,4],[25,4],
     [26,8],[27,8],[28,8],[29,8],[9,8],[10,8],[17,8],[18,8]
   ];
-  bpos.forEach(([col, row]) => {
-    bamboos.push({ x: col * TILE + 8, y: row * TILE - 24, w: 16, h: 24, collected: false });
+  bpos.forEach(([col,row]) => {
+    bamboos.push({ x:col*TILE+8, y:row*TILE-24, w:16, h:24, collected:false });
   });
 
   const edef = [
-    { x: 6 * TILE,  minX: 5  * TILE, maxX: 8  * TILE, dir: 1  },
-    { x: 13 * TILE, minX: 11 * TILE, maxX: 14 * TILE, dir: -1 },
-    { x: 20 * TILE, minX: 19 * TILE, maxX: 22 * TILE, dir: 1  },
-    { x: 26 * TILE, minX: 25 * TILE, maxX: 29 * TILE, dir: -1 },
+    { x:6*TILE,  minX:5*TILE,  maxX:8*TILE,  dir:1  },
+    { x:13*TILE, minX:11*TILE, maxX:14*TILE, dir:-1 },
+    { x:20*TILE, minX:19*TILE, maxX:22*TILE, dir:1  },
+    { x:26*TILE, minX:25*TILE, maxX:29*TILE, dir:-1 },
   ];
   edef.forEach(e => {
-    enemies.push({ x: e.x, y: 8 * TILE - 24, w: 24, h: 24,
-                   dir: e.dir, minX: e.minX, maxX: e.maxX, speed: 1.2, alive: true });
+    enemies.push({ x:e.x, y:8*TILE-24, w:24, h:24,
+                   dir:e.dir, minX:e.minX, maxX:e.maxX, speed:1.2, alive:true, type:'walker' });
   });
 
-  return { platforms, bamboos, enemies };
+  return { platforms, bamboos, enemies, mapW: MAP_W1, timeLimit: 60 };
 }
 
-function initGame() {
-  score = 0; lives = 3; timeLeft = 60; invincible = 0;
-  scoreEl.textContent = '🎋 0';
-  livesEl.textContent = '❤️ 3';
-  timerEl.textContent = '⏱ 60';
-  level = buildLevel();
+// ─── LEVEL 2 ───────────────────────────────────────────
+const MAP_W2 = 38;
+function buildLevel2() {
+  const platforms = [];
+  const bamboos = [];
+  const enemies = [];
+
+  // Ground
+  for (let x = 0; x < MAP_W2; x++)
+    platforms.push({ x:x*TILE, y:9*TILE, w:TILE, h:TILE*2, type:'ground' });
+
+  // More complex platform layout — gaps, higher platforms, longer jumps
+  const plats = [
+    [2,7,2],[5,6,2],[8,5,2],[11,7,2],[13,5,3],[17,6,2],
+    [20,4,2],[22,6,3],[25,5,2],[28,7,2],[30,5,3],[33,6,2],[35,4,2]
+  ];
+  plats.forEach(([col,row,len]) => {
+    for (let i = 0; i < len; i++)
+      platforms.push({ x:(col+i)*TILE, y:row*TILE, w:TILE, h:TILE/2, type:'platform' });
+  });
+
+  // More bamboos — 38 total
+  const bpos = [
+    [2,9],[3,9],[5,9],[6,9],[8,5],[9,5],[11,9],[12,9],
+    [13,4],[14,4],[15,4],[17,9],[18,9],[20,3],[21,3],
+    [22,5],[23,5],[24,5],[25,9],[26,9],[27,9],
+    [28,9],[30,4],[31,4],[32,4],[33,9],[34,9],
+    [35,3],[36,3],[37,9],[4,6],[7,4],[16,5],[19,9],[29,6],[10,8],[1,8],[0,8]
+  ];
+  bpos.forEach(([col,row]) => {
+    bamboos.push({ x:col*TILE+8, y:row*TILE-24, w:16, h:24, collected:false });
+  });
+
+  // Walkers
+  const walkerDef = [
+    { x:3*TILE,  minX:2*TILE,  maxX:5*TILE,  dir:1, speed:1.5 },
+    { x:12*TILE, minX:11*TILE, maxX:13*TILE, dir:-1, speed:1.8 },
+    { x:18*TILE, minX:17*TILE, maxX:20*TILE, dir:1, speed:1.6 },
+    { x:26*TILE, minX:25*TILE, maxX:28*TILE, dir:-1, speed:2.0 },
+    { x:34*TILE, minX:33*TILE, maxX:37*TILE, dir:1, speed:1.8 },
+  ];
+  walkerDef.forEach(e => {
+    enemies.push({ x:e.x, y:8*TILE-24, w:24, h:24,
+                   dir:e.dir, minX:e.minX, maxX:e.maxX, speed:e.speed, alive:true, type:'walker' });
+  });
+
+  // Shooters — plant/seed villains, stationary but fire seeds horizontally
+  const shooterDef = [
+    { x:9*TILE,  y:8*TILE-28, shootDir:-1, range:180, cooldown:0 },
+    { x:22*TILE, y:8*TILE-28, shootDir:-1, range:200, cooldown:60 },
+    { x:30*TILE, y:8*TILE-28, shootDir:1,  range:200, cooldown:30 },
+  ];
+  shooterDef.forEach(s => {
+    enemies.push({ x:s.x, y:s.y, w:26, h:28,
+                   dir:s.shootDir, alive:true, type:'shooter',
+                   range:s.range, cooldown:s.cooldown, maxCooldown:100, shootTimer:0 });
+  });
+
+  return { platforms, bamboos, enemies, mapW: MAP_W2, timeLimit: 90 };
+}
+
+// ─── Init ──────────────────────────────────────────────
+function initGame(lvl) {
+  currentLevel = lvl;
+  score = (state === 'nextLevel') ? score : 0; // carry score to level 2
+  lives = (state === 'nextLevel') ? lives : 3;
+  timeLeft = lvl === 1 ? 60 : 90;
+  invincible = 0;
+  seeds = [];
+  particles = [];
+
+  scoreEl.textContent = '🎋 ' + score;
+  livesEl.textContent = '❤️ ' + lives;
+  timerEl.textContent = '⏱ ' + timeLeft;
+  levelBadgeEl.textContent = 'NIVEL ' + lvl;
+
+  level = lvl === 1 ? buildLevel1() : buildLevel2();
   player = { x: TILE, y: 7 * TILE, vx: 0, vy: 0, w: 28, h: 30,
              onGround: false, dir: 1, frame: 0, frameTimer: 0 };
   camera.x = 0;
 }
 
-// ─── Physics ─────────────────────────────────────────
+// ─── Physics ───────────────────────────────────────────
 function aabb(a, b) {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
-
 function resolveY(p, plats) {
   p.onGround = false;
   for (const pl of plats) {
@@ -272,7 +278,6 @@ function resolveY(p, plats) {
     }
   }
 }
-
 function resolveX(p, plats) {
   for (const pl of plats) {
     if (pl.type !== 'ground') continue;
@@ -286,9 +291,19 @@ function resolveX(p, plats) {
   }
 }
 
-// ─── Game loop ───────────────────────────────────────
-let lastTime = 0;
+// ─── Particles ─────────────────────────────────────────
+function spawnParticles(x, y, color) {
+  for (let i = 0; i < 8; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 5,
+      vy: (Math.random() - 0.5) * 5 - 2,
+      life: 25, color
+    });
+  }
+}
 
+// ─── Game loop ─────────────────────────────────────────
 function gameLoop(ts) {
   animFrame = requestAnimationFrame(gameLoop);
   if (state !== 'playing') return;
@@ -301,98 +316,188 @@ function gameLoop(ts) {
   if (left)  { player.vx = -SPEED; player.dir = -1; }
   if (right) { player.vx =  SPEED; player.dir =  1; }
   if (jump && player.onGround) { player.vy = JUMP; player.onGround = false; }
-  touch.jump = false; // one-shot
+  touch.jump = false;
 
   player.vy += GRAVITY;
   player.y += player.vy;
   resolveY(player, level.platforms);
   player.x += player.vx;
-  player.x = Math.max(0, Math.min(player.x, (MAP_W - 1) * TILE));
+  player.x = Math.max(0, Math.min(player.x, (level.mapW - 1) * TILE));
   resolveX(player, level.platforms);
+
+  // Fall off map
+  if (player.y > H + 40) {
+    lives--; livesEl.textContent = '❤️ ' + lives;
+    if (lives <= 0) { endGame(false); return; }
+    player.x = TILE; player.y = 7 * TILE; player.vy = 0; invincible = 120;
+  }
 
   player.frameTimer++;
   if (player.frameTimer > 8) { player.frame = (player.frame + 1) % 2; player.frameTimer = 0; }
 
   const targetCam = player.x - W / 2 + player.w / 2;
-  camera.x = Math.max(0, Math.min(targetCam, MAP_W * TILE - W));
+  camera.x = Math.max(0, Math.min(targetCam, level.mapW * TILE - W));
 
   // Bamboo
   for (const b of level.bamboos) {
     if (!b.collected && aabb(player, b)) {
       b.collected = true; score++;
       scoreEl.textContent = '🎋 ' + score;
+      spawnParticles(b.x + 8, b.y + 12, '#7CB342');
     }
   }
 
   // Enemies
   for (const e of level.enemies) {
     if (!e.alive) continue;
-    e.x += e.dir * e.speed;
-    if (e.x <= e.minX || e.x + e.w >= e.maxX) e.dir *= -1;
 
-    if (invincible <= 0 && aabb(player, e)) {
-      if (player.vy > 0 && player.y + player.h < e.y + e.h / 2 + 10) {
-        e.alive = false; player.vy = -8; score += 2;
-        scoreEl.textContent = '🎋 ' + score;
-      } else {
-        lives--; livesEl.textContent = '❤️ ' + lives;
-        invincible = 120;
-        if (lives <= 0) endGame(false);
+    if (e.type === 'walker') {
+      e.x += e.dir * e.speed;
+      if (e.x <= e.minX || e.x + e.w >= e.maxX) e.dir *= -1;
+
+      if (invincible <= 0 && aabb(player, e)) {
+        if (player.vy > 0 && player.y + player.h < e.y + e.h / 2 + 10) {
+          e.alive = false; player.vy = -8; score += 2;
+          scoreEl.textContent = '🎋 ' + score;
+          spawnParticles(e.x + 12, e.y + 12, '#E53935');
+        } else {
+          loseLife(); if (lives <= 0) return;
+        }
+      }
+    }
+
+    if (e.type === 'shooter') {
+      // Cooldown
+      e.shootTimer++;
+      if (e.shootTimer >= e.maxCooldown) {
+        e.shootTimer = 0;
+        // Only shoot if player is within horizontal range
+        const dist = player.x - e.x;
+        if (Math.abs(dist) < e.range) {
+          const sd = dist < 0 ? -1 : 1;
+          seeds.push({ x: e.x + 13, y: e.y + 14, vx: sd * 4.5, vy: 0, w: 10, h: 10, life: 80 });
+        }
+      }
+
+      if (invincible <= 0 && aabb(player, e)) {
+        if (player.vy > 0 && player.y + player.h < e.y + e.h / 2 + 10) {
+          e.alive = false; player.vy = -8; score += 3;
+          scoreEl.textContent = '🎋 ' + score;
+          spawnParticles(e.x + 13, e.y + 14, '#558B2F');
+        } else {
+          loseLife(); if (lives <= 0) return;
+        }
       }
     }
   }
 
+  // Seeds
+  for (let i = seeds.length - 1; i >= 0; i--) {
+    const s = seeds[i];
+    s.x += s.vx;
+    s.vy += 0.12; // slight arc
+    s.y += s.vy;
+    s.life--;
+
+    // Hit platform
+    let hitWall = false;
+    for (const pl of level.platforms) {
+      if (aabb(s, pl)) { hitWall = true; break; }
+    }
+    if (hitWall || s.life <= 0 || s.x < 0 || s.x > level.mapW * TILE) {
+      seeds.splice(i, 1); continue;
+    }
+
+    if (invincible <= 0 && aabb(player, s)) {
+      seeds.splice(i, 1);
+      loseLife(); if (lives <= 0) return;
+    }
+  }
+
+  // Particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.life--;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
   if (invincible > 0) invincible--;
-  if (level.bamboos.every(b => b.collected)) endGame(true);
+
+  // Win condition
+  if (level.bamboos.every(b => b.collected)) {
+    if (currentLevel === 1) {
+      goToLevel2();
+    } else {
+      endGame(true);
+    }
+  }
 
   draw();
 }
 
-// ─── Drawing ─────────────────────────────────────────
-function drawPanda(x, y, dir, frame, alpha) {
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  ctx.translate(x, y);
-  if (dir === -1) { ctx.scale(-1, 1); ctx.translate(-28, 0); }
+function loseLife() {
+  lives--; livesEl.textContent = '❤️ ' + lives;
+  invincible = 120;
+  if (lives <= 0) { endGame(false); }
+}
 
+function goToLevel2() {
+  state = 'nextLevel';
+  clearInterval(timerInterval);
+  overlay.style.display = 'flex';
+  overlay.innerHTML = `
+    <h2>🎉 ¡Nivel 1 completo!</h2>
+    <p>¡Recogiste todo el bambú!<br>Puntuación: ${score}<br><br>
+    <span style="color:#FFD54F;font-size:15px;">⚠️ NIVEL 2: El Bosque Oscuro</span><br>
+    Consigue 39 bambúes 🎋<br>¡Cuidado con las plantas que disparan semillas! 🌱</p>
+    <button class="btn-play" id="startBtn">NIVEL 2 →</button>`;
+  document.getElementById('startBtn').addEventListener('click', () => {
+    overlay.style.display = 'none';
+    state = 'playing';
+    initGame(2);
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      timerEl.textContent = '⏱ ' + timeLeft;
+      if (timeLeft <= 0) endGame(false);
+    }, 1000);
+  });
+}
+
+// ─── Drawing ───────────────────────────────────────────
+function drawPanda(x, y, dir, frame, alpha) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y);
+  if (dir === -1) { ctx.scale(-1, 1); ctx.translate(-28, 0); }
   ctx.fillStyle = '#FFF';
   ctx.beginPath(); ctx.ellipse(14, 20, 13, 15, 0, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = '#222'; ctx.lineWidth = 1; ctx.stroke();
-
   ctx.fillStyle = '#FFF';
   ctx.beginPath(); ctx.arc(14, 8, 10, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = '#222'; ctx.stroke();
-
   ctx.fillStyle = '#222';
   ctx.beginPath(); ctx.arc(6, 1, 4, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(22, 1, 4, 0, Math.PI * 2); ctx.fill();
-
   ctx.beginPath(); ctx.ellipse(10, 7, 3.5, 3, 0, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(18, 7, 3.5, 3, 0, 0, Math.PI * 2); ctx.fill();
-
   ctx.fillStyle = '#FFF';
   ctx.beginPath(); ctx.arc(10, 7, 1.5, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(18, 7, 1.5, 0, Math.PI * 2); ctx.fill();
-
   ctx.fillStyle = '#222';
   ctx.beginPath(); ctx.arc(14, 10, 1.5, 0, Math.PI * 2); ctx.fill();
-
   const armY = frame === 0 ? 16 : 18;
   ctx.fillStyle = '#222';
   ctx.beginPath(); ctx.ellipse(3,  armY, 3, 7, -0.3, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(25, armY, 3, 7,  0.3, 0, Math.PI * 2); ctx.fill();
-
   const lo = frame === 0 ? 0 : 2;
   ctx.beginPath(); ctx.ellipse(9,  32 + lo, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.ellipse(19, 32 - lo, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
-
   ctx.restore();
 }
 
 function drawBamboo(x, y) {
   ctx.fillStyle = '#7CB342'; ctx.fillRect(x + 5, y, 6, 24);
   ctx.fillStyle = '#558B2F';
-  ctx.fillRect(x + 5, y + 8,  6, 2);
+  ctx.fillRect(x + 5, y + 8, 6, 2);
   ctx.fillRect(x + 5, y + 16, 6, 2);
   ctx.fillStyle = '#AED581';
   ctx.beginPath(); ctx.ellipse(x + 14, y + 4,  8, 4,  0.3, 0, Math.PI * 2); ctx.fill();
@@ -401,20 +506,83 @@ function drawBamboo(x, y) {
 
 function drawEnemy(e) {
   if (!e.alive) return;
-  ctx.save(); ctx.translate(e.x, e.y);
-  ctx.fillStyle = '#E53935';
-  ctx.beginPath(); ctx.ellipse(12, 16, 11, 12, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#EF5350';
-  ctx.beginPath(); ctx.arc(12, 7, 8, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#FFF';
-  ctx.beginPath(); ctx.arc(9, 6, 2.5, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(15, 6, 2.5, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#111';
-  ctx.beginPath(); ctx.arc(9,  6, 1.2, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(15, 6, 1.2, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#B71C1C';
-  ctx.beginPath(); ctx.ellipse(7,  27, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(17, 27, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+  if (e.type === 'walker') {
+    ctx.save(); ctx.translate(e.x, e.y);
+    ctx.fillStyle = '#E53935';
+    ctx.beginPath(); ctx.ellipse(12, 16, 11, 12, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#EF5350';
+    ctx.beginPath(); ctx.arc(12, 7, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#FFF';
+    ctx.beginPath(); ctx.arc(9, 6, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(15, 6, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(9, 6, 1.2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(15, 6, 1.2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#B71C1C';
+    ctx.beginPath(); ctx.ellipse(7, 27, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(17, 27, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  } else if (e.type === 'shooter') {
+    // Piranha Plant / evil plant villain
+    ctx.save(); ctx.translate(e.x, e.y);
+
+    // Stem
+    ctx.fillStyle = '#388E3C';
+    ctx.fillRect(9, 18, 8, 12);
+
+    // Pot / base
+    ctx.fillStyle = '#6D4C41';
+    ctx.beginPath(); ctx.roundRect(3, 20, 20, 10, 3); ctx.fill();
+    ctx.fillStyle = '#8D6E63';
+    ctx.fillRect(3, 20, 20, 4);
+
+    // Head — animated open/close with shootTimer
+    const open = e.shootTimer > e.maxCooldown - 20;
+    ctx.fillStyle = '#2E7D32';
+    ctx.beginPath(); ctx.ellipse(13, 10, 12, open ? 12 : 9, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Petals
+    ctx.fillStyle = '#1B5E20';
+    for (let a = 0; a < 6; a++) {
+      const ang = (a / 6) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.ellipse(13 + Math.cos(ang) * 11, 10 + Math.sin(ang) * 10, 5, 3, ang, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Face
+    ctx.fillStyle = '#C62828';
+    ctx.beginPath(); ctx.ellipse(13, open ? 12 : 10, 7, open ? 6 : 4, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Eyes
+    ctx.fillStyle = '#FFF';
+    ctx.beginPath(); ctx.arc(9, 7, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(17, 7, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(9.5, 7, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(17.5, 7, 1.5, 0, Math.PI * 2); ctx.fill();
+
+    // Teeth (when open)
+    if (open) {
+      ctx.fillStyle = '#FFF';
+      ctx.fillRect(8, 11, 3, 5);
+      ctx.fillRect(14, 11, 3, 5);
+    }
+
+    ctx.restore();
+  }
+}
+
+function drawSeed(s) {
+  ctx.save(); ctx.translate(s.x, s.y);
+  ctx.fillStyle = '#8BC34A';
+  ctx.beginPath(); ctx.ellipse(5, 5, 5, 4, 0.4, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#558B2F';
+  ctx.beginPath(); ctx.ellipse(5, 5, 3, 2, 0.4, 0, Math.PI * 2); ctx.fill();
+  // Speed trail
+  ctx.globalAlpha = 0.3;
+  ctx.fillStyle = '#AED581';
+  ctx.beginPath(); ctx.ellipse(5 - s.vx * 1.5, 5, 4, 2, 0, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
 }
 
@@ -426,9 +594,11 @@ function drawCloud(x, y) {
   ctx.fillRect(x - 8, y, 54, 20);
 }
 
-const clouds = [
-  {bx: 50, y: 40}, {bx: 200, y: 60}, {bx: 400, y: 35},
-  {bx: 600, y: 55}, {bx: 800, y: 40}, {bx: 1000, y: 50}
+const clouds1 = [
+  {bx:50,y:40},{bx:200,y:60},{bx:400,y:35},{bx:600,y:55},{bx:800,y:40},{bx:1000,y:50}
+];
+const clouds2 = [
+  {bx:30,y:50},{bx:180,y:30},{bx:350,y:55},{bx:550,y:40},{bx:750,y:60},{bx:950,y:35},{bx:1150,y:50}
 ];
 
 function draw() {
@@ -436,16 +606,33 @@ function draw() {
   ctx.save();
   ctx.translate(-camera.x, 0);
 
+  // Sky — darker in level 2
   const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
-  skyGrad.addColorStop(0, '#87CEEB');
-  skyGrad.addColorStop(1, '#C8E6FA');
+  if (currentLevel === 1) {
+    skyGrad.addColorStop(0, '#87CEEB'); skyGrad.addColorStop(1, '#C8E6FA');
+  } else {
+    skyGrad.addColorStop(0, '#1a2a3a'); skyGrad.addColorStop(1, '#2d4a5a');
+  }
   ctx.fillStyle = skyGrad;
   ctx.fillRect(camera.x, 0, W, H);
 
-  clouds.forEach(c => drawCloud(c.bx, c.y));
+  const cls = currentLevel === 1 ? clouds1 : clouds2;
+  if (currentLevel === 1) {
+    cls.forEach(c => drawCloud(c.bx, c.y));
+  } else {
+    // Dark clouds
+    cls.forEach(c => {
+      ctx.fillStyle = 'rgba(60,80,100,0.7)';
+      ctx.beginPath(); ctx.arc(c.bx, c.y, 18, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(c.bx+20, c.y-5, 14, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(c.bx+38, c.y, 16, 0, Math.PI * 2); ctx.fill();
+      ctx.fillRect(c.bx-8, c.y, 54, 20);
+    });
+  }
 
-  ctx.fillStyle = '#B0BEC5';
-  for (let i = 0; i < 6; i++) {
+  // Mountains
+  ctx.fillStyle = currentLevel === 1 ? '#B0BEC5' : '#263238';
+  for (let i = 0; i < 8; i++) {
     ctx.beginPath();
     ctx.moveTo(i * 180 - 50, H - 80);
     ctx.lineTo(i * 180 + 90, H - 200);
@@ -453,18 +640,24 @@ function draw() {
     ctx.fill();
   }
 
-  ctx.fillStyle = '#5C4033';
-  ctx.fillRect(0, 9 * TILE + 4, MAP_W * TILE, H);
+  // Ground
+  ctx.fillStyle = currentLevel === 1 ? '#5C4033' : '#3E2723';
+  ctx.fillRect(0, 9 * TILE + 4, level.mapW * TILE, H);
 
   for (const pl of level.platforms) {
     if (pl.type === 'ground') {
-      ctx.fillStyle = '#5C4033'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
-      ctx.fillStyle = '#4CAF50'; ctx.fillRect(pl.x, pl.y, pl.w, 6);
-      ctx.fillStyle = '#388E3C'; ctx.fillRect(pl.x, pl.y + 6, pl.w, 2);
+      ctx.fillStyle = currentLevel === 1 ? '#5C4033' : '#3E2723';
+      ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
+      ctx.fillStyle = currentLevel === 1 ? '#4CAF50' : '#1B5E20';
+      ctx.fillRect(pl.x, pl.y, pl.w, 6);
+      ctx.fillStyle = currentLevel === 1 ? '#388E3C' : '#1a4a1a';
+      ctx.fillRect(pl.x, pl.y + 6, pl.w, 2);
     } else {
-      ctx.fillStyle = '#8D6E63'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
-      ctx.fillStyle = '#A5D6A7'; ctx.fillRect(pl.x, pl.y, pl.w, 5);
-      ctx.fillStyle = '#81C784'; ctx.fillRect(pl.x + 2, pl.y + 5, pl.w - 4, 2);
+      ctx.fillStyle = '#6D4C41'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
+      ctx.fillStyle = currentLevel === 1 ? '#A5D6A7' : '#4CAF50';
+      ctx.fillRect(pl.x, pl.y, pl.w, 5);
+      ctx.fillStyle = currentLevel === 1 ? '#81C784' : '#388E3C';
+      ctx.fillRect(pl.x + 2, pl.y + 5, pl.w - 4, 2);
       ctx.strokeStyle = '#6D4C41'; ctx.lineWidth = 1;
       ctx.strokeRect(pl.x + .5, pl.y + .5, pl.w - 1, pl.h - 1);
     }
@@ -475,12 +668,23 @@ function draw() {
   }
 
   for (const e of level.enemies) drawEnemy(e);
+  for (const s of seeds) drawSeed(s);
+
+  // Particles
+  for (const p of particles) {
+    ctx.save();
+    ctx.globalAlpha = p.life / 25;
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
 
   const alpha = invincible > 0 ? (Math.floor(invincible / 6) % 2 === 0 ? 0.4 : 1) : 1;
   drawPanda(player.x, player.y - 2, player.dir, player.frame, alpha);
 
   ctx.restore();
 
+  // HUD overlay
   const total = level.bamboos.length;
   const collected = level.bamboos.filter(b => b.collected).length;
   ctx.fillStyle = 'rgba(0,0,0,0.45)';
@@ -490,41 +694,56 @@ function draw() {
   ctx.textAlign = 'right';
   ctx.fillText(collected + '/' + total + ' 🎋', W - 10, 23);
   ctx.textAlign = 'left';
+
+  // Level 2 warning banner for shooters
+  if (currentLevel === 2) {
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillRect(8, 6, 130, 18);
+    ctx.fillStyle = '#FFD54F';
+    ctx.font = 'bold 11px Courier New';
+    ctx.fillText('🌱 ¡Esquiva semillas!', 12, 19);
+  }
 }
 
-// ─── Game state ──────────────────────────────────────
+// ─── Game state ────────────────────────────────────────
 function endGame(win) {
   state = 'over';
   clearInterval(timerInterval);
   overlay.style.display = 'flex';
-  overlay.innerHTML = win
-    ? `<h2>🎉 ¡Ganaste!</h2><p>¡Recogiste todo el bambú!<br>Puntuación: ${score}</p><button class="btn-play" id="startBtn">JUGAR DE NUEVO</button>`
-    : `<h2>💀 Game Over</h2><p>Puntuación: ${score}</p><button class="btn-play" id="startBtn">INTENTAR DE NUEVO</button>`;
+  if (win) {
+    overlay.innerHTML = `<h2>🏆 ¡GANASTE!</h2>
+      <p>¡Completaste los 2 niveles!<br>Puntuación final: ${score} 🎋<br><br>
+      ¡El panda está feliz y lleno de bambú! 🐼</p>
+      <button class="btn-play" id="startBtn">JUGAR DE NUEVO</button>`;
+  } else {
+    overlay.innerHTML = `<h2>💀 Game Over</h2>
+      <p>Nivel ${currentLevel} — Puntuación: ${score}</p>
+      <button class="btn-play" id="startBtn">INTENTAR DE NUEVO</button>`;
+  }
   document.getElementById('startBtn').addEventListener('click', startGame);
 }
 
 function startGame() {
   overlay.style.display = 'none';
   state = 'playing';
-  initGame();
+  initGame(1);
   clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     timeLeft--;
     timerEl.textContent = '⏱ ' + timeLeft;
     if (timeLeft <= 0) endGame(false);
   }, 1000);
-
   if (isMobile()) controlsDiv.classList.add('visible');
 }
 
-// ─── Keyboard ────────────────────────────────────────
+// ─── Keyboard ──────────────────────────────────────────
 document.addEventListener('keydown', e => {
   keys[e.key] = true;
-  if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
+  if ([' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
 });
 document.addEventListener('keyup', e => { keys[e.key] = false; });
 
-// ─── Touch controls ──────────────────────────────────
+// ─── Touch controls ────────────────────────────────────
 function setupTouchBtn(id, prop) {
   const btn = document.getElementById(id);
   if (!btn) return;
@@ -533,20 +752,18 @@ function setupTouchBtn(id, prop) {
   btn.addEventListener('mousedown',  () => { touch[prop] = true;  btn.classList.add('pressed'); });
   btn.addEventListener('mouseup',    () => { touch[prop] = false; btn.classList.remove('pressed'); });
 }
-
 setupTouchBtn('btnLeft',  'left');
 setupTouchBtn('btnRight', 'right');
 
-// Jump is one-shot
 const jumpBtn = document.getElementById('btnJump');
 if (jumpBtn) {
-  jumpBtn.addEventListener('touchstart', e => { e.preventDefault(); touch.jump = true; jumpBtn.classList.add('pressed'); },    { passive: false });
+  jumpBtn.addEventListener('touchstart', e => { e.preventDefault(); touch.jump = true; jumpBtn.classList.add('pressed'); }, { passive: false });
   jumpBtn.addEventListener('touchend',   e => { e.preventDefault(); jumpBtn.classList.remove('pressed'); }, { passive: false });
   jumpBtn.addEventListener('mousedown',  () => { touch.jump = true; jumpBtn.classList.add('pressed'); });
   jumpBtn.addEventListener('mouseup',    () => { jumpBtn.classList.remove('pressed'); });
 }
 
-// ─── Start ───────────────────────────────────────────
+// ─── Start ─────────────────────────────────────────────
 document.getElementById('startBtn').addEventListener('click', startGame);
 animFrame = requestAnimationFrame(gameLoop);
 </script>
