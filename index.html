@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🐼 Panda Bambú</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; touch-action: manipulation; }
+
+    body {
+      background: #0d1f0d;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+    }
+
+    #gameWrapper {
+      background: #1a3a1a;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #2d5a2d;
+      width: 100%;
+      max-width: 640px;
+    }
+
+    #hud {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: #0d1f0d;
+      color: #7dff7d;
+      font-size: 13px;
+      font-weight: bold;
+      border-bottom: 2px solid #2d5a2d;
+    }
+
+    #gameArea {
+      position: relative;
+      width: 100%;
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      image-rendering: pixelated;
+    }
+
+    #overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.80);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    #overlay h2 { font-size: 26px; color: #7dff7d; margin-bottom: 8px; }
+    #overlay p  { font-size: 13px; color: #ccc; margin-bottom: 18px; text-align: center; line-height: 1.6; }
+
+    .btn-play {
+      background: #2d7a2d;
+      color: white;
+      border: 2px solid #7dff7d;
+      padding: 10px 30px;
+      font-size: 16px;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .btn-play:hover, .btn-play:active { background: #3d9a3d; }
+
+    /* Mobile controls */
+    #controls {
+      display: none;
+      background: #0d1f0d;
+      padding: 10px 16px;
+      border-top: 2px solid #2d5a2d;
+    }
+
+    #controls.visible { display: flex; justify-content: space-between; align-items: center; }
+
+    .dpad {
+      display: grid;
+      grid-template-columns: 44px 44px;
+      gap: 6px;
+    }
+
+    .ctrl-btn {
+      background: #1e4d1e;
+      border: 2px solid #4CAF50;
+      border-radius: 8px;
+      color: #7dff7d;
+      font-size: 20px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      transition: background 0.1s;
+    }
+
+    .ctrl-btn:active, .ctrl-btn.pressed { background: #3d9a3d; }
+
+    .jump-btn {
+      background: #1e3a6e;
+      border: 2px solid #42A5F5;
+      color: #90CAF9;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      font-size: 26px;
+    }
+
+    .jump-btn:active, .jump-btn.pressed { background: #1565C0; }
+
+    #msg {
+      text-align: center;
+      padding: 5px;
+      background: #0d1f0d;
+      color: #4CAF50;
+      font-size: 11px;
+      border-top: 2px solid #2d5a2d;
+    }
+
+    @media (max-width: 640px) {
+      #gameWrapper { border-radius: 0; border-left: none; border-right: none; }
+      body { justify-content: flex-start; }
+      #msg { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="gameWrapper">
+  <div id="hud">
+    <span>🐼 PANDA BAMBÚ</span>
+    <span id="score">🎋 0</span>
+    <span id="lives">❤️ 3</span>
+    <span id="timer">⏱ 60</span>
+  </div>
+
+  <div id="gameArea">
+    <canvas id="gameCanvas" width="640" height="320"></canvas>
+    <div id="overlay">
+      <h2>🐼 PANDA BAMBÚ</h2>
+      <p>¡Recoge todo el bambú!<br>← → Mover &nbsp;|&nbsp; ↑ / Z Saltar<br><br>📱 Móvil: usa los botones de abajo</p>
+      <button class="btn-play" id="startBtn">JUGAR</button>
+    </div>
+  </div>
+
+  <div id="controls">
+    <div class="dpad">
+      <div class="ctrl-btn" id="btnLeft">◀</div>
+      <div class="ctrl-btn" id="btnRight">▶</div>
+    </div>
+    <div class="ctrl-btn jump-btn" id="btnJump">↑</div>
+  </div>
+
+  <div id="msg">← → Mover &nbsp;|&nbsp; ↑ / Z Saltar &nbsp;|&nbsp; Pisa enemigos desde arriba</div>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const scoreEl = document.getElementById('score');
+const livesEl = document.getElementById('lives');
+const timerEl = document.getElementById('timer');
+const controlsDiv = document.getElementById('controls');
+
+const W = 640, H = 320;
+const TILE = 32;
+const GRAVITY = 0.5;
+const JUMP = -11;
+const SPEED = 3.5;
+
+let state = 'idle';
+let keys = {};
+let touch = { left: false, right: false, jump: false };
+let score, lives, timeLeft, timerInterval, animFrame;
+let camera = { x: 0 };
+let invincible = 0;
+let level, player;
+
+// ─── Detect mobile ───────────────────────────────────
+function isMobile() {
+  return /Android|iPhone|iPad|iPod|Touch/i.test(navigator.userAgent) || window.innerWidth < 640;
+}
+
+// ─── Level builder ───────────────────────────────────
+const MAP_W = 30;
+
+function buildLevel() {
+  const platforms = [];
+  const bamboos = [];
+  const enemies = [];
+
+  for (let x = 0; x < MAP_W; x++) {
+    platforms.push({ x: x * TILE, y: 9 * TILE, w: TILE, h: TILE * 2, type: 'ground' });
+  }
+
+  const plats = [
+    [3, 6, 3], [7, 5, 2], [11, 6, 3], [15, 4, 2],
+    [19, 6, 2], [23, 5, 3], [26, 6, 2]
+  ];
+  plats.forEach(([col, row, len]) => {
+    for (let i = 0; i < len; i++) {
+      platforms.push({ x: (col + i) * TILE, y: row * TILE, w: TILE, h: TILE / 2, type: 'platform' });
+    }
+  });
+
+  const bpos = [
+    [3,8],[4,8],[5,8],[7,4],[8,4],[11,8],[12,8],[13,8],
+    [3,5],[7,5],[15,3],[16,3],[19,8],[20,8],[23,4],[24,4],[25,4],
+    [26,8],[27,8],[28,8],[29,8],[9,8],[10,8],[17,8],[18,8]
+  ];
+  bpos.forEach(([col, row]) => {
+    bamboos.push({ x: col * TILE + 8, y: row * TILE - 24, w: 16, h: 24, collected: false });
+  });
+
+  const edef = [
+    { x: 6 * TILE,  minX: 5  * TILE, maxX: 8  * TILE, dir: 1  },
+    { x: 13 * TILE, minX: 11 * TILE, maxX: 14 * TILE, dir: -1 },
+    { x: 20 * TILE, minX: 19 * TILE, maxX: 22 * TILE, dir: 1  },
+    { x: 26 * TILE, minX: 25 * TILE, maxX: 29 * TILE, dir: -1 },
+  ];
+  edef.forEach(e => {
+    enemies.push({ x: e.x, y: 8 * TILE - 24, w: 24, h: 24,
+                   dir: e.dir, minX: e.minX, maxX: e.maxX, speed: 1.2, alive: true });
+  });
+
+  return { platforms, bamboos, enemies };
+}
+
+function initGame() {
+  score = 0; lives = 3; timeLeft = 60; invincible = 0;
+  scoreEl.textContent = '🎋 0';
+  livesEl.textContent = '❤️ 3';
+  timerEl.textContent = '⏱ 60';
+  level = buildLevel();
+  player = { x: TILE, y: 7 * TILE, vx: 0, vy: 0, w: 28, h: 30,
+             onGround: false, dir: 1, frame: 0, frameTimer: 0 };
+  camera.x = 0;
+}
+
+// ─── Physics ─────────────────────────────────────────
+function aabb(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+function resolveY(p, plats) {
+  p.onGround = false;
+  for (const pl of plats) {
+    if (p.x + p.w > pl.x && p.x < pl.x + pl.w) {
+      if (p.vy >= 0 && p.y + p.h > pl.y && p.y + p.h < pl.y + pl.h + p.vy + 2) {
+        p.y = pl.y - p.h; p.vy = 0; p.onGround = true;
+      } else if (p.vy < 0 && p.y < pl.y + pl.h && p.y > pl.y) {
+        p.y = pl.y + pl.h; p.vy = 0;
+      }
+    }
+  }
+}
+
+function resolveX(p, plats) {
+  for (const pl of plats) {
+    if (pl.type !== 'ground') continue;
+    if (p.y + p.h > pl.y && p.y < pl.y + pl.h) {
+      if (p.x + p.w > pl.x && p.x < pl.x + pl.w) {
+        if (p.vx > 0) p.x = pl.x - p.w;
+        else if (p.vx < 0) p.x = pl.x + pl.w;
+        p.vx = 0;
+      }
+    }
+  }
+}
+
+// ─── Game loop ───────────────────────────────────────
+let lastTime = 0;
+
+function gameLoop(ts) {
+  animFrame = requestAnimationFrame(gameLoop);
+  if (state !== 'playing') return;
+
+  const left  = keys['ArrowLeft']  || keys['a'] || touch.left;
+  const right = keys['ArrowRight'] || keys['d'] || touch.right;
+  const jump  = keys['ArrowUp'] || keys['z'] || keys[' '] || keys['w'] || touch.jump;
+
+  player.vx = 0;
+  if (left)  { player.vx = -SPEED; player.dir = -1; }
+  if (right) { player.vx =  SPEED; player.dir =  1; }
+  if (jump && player.onGround) { player.vy = JUMP; player.onGround = false; }
+  touch.jump = false; // one-shot
+
+  player.vy += GRAVITY;
+  player.y += player.vy;
+  resolveY(player, level.platforms);
+  player.x += player.vx;
+  player.x = Math.max(0, Math.min(player.x, (MAP_W - 1) * TILE));
+  resolveX(player, level.platforms);
+
+  player.frameTimer++;
+  if (player.frameTimer > 8) { player.frame = (player.frame + 1) % 2; player.frameTimer = 0; }
+
+  const targetCam = player.x - W / 2 + player.w / 2;
+  camera.x = Math.max(0, Math.min(targetCam, MAP_W * TILE - W));
+
+  // Bamboo
+  for (const b of level.bamboos) {
+    if (!b.collected && aabb(player, b)) {
+      b.collected = true; score++;
+      scoreEl.textContent = '🎋 ' + score;
+    }
+  }
+
+  // Enemies
+  for (const e of level.enemies) {
+    if (!e.alive) continue;
+    e.x += e.dir * e.speed;
+    if (e.x <= e.minX || e.x + e.w >= e.maxX) e.dir *= -1;
+
+    if (invincible <= 0 && aabb(player, e)) {
+      if (player.vy > 0 && player.y + player.h < e.y + e.h / 2 + 10) {
+        e.alive = false; player.vy = -8; score += 2;
+        scoreEl.textContent = '🎋 ' + score;
+      } else {
+        lives--; livesEl.textContent = '❤️ ' + lives;
+        invincible = 120;
+        if (lives <= 0) endGame(false);
+      }
+    }
+  }
+
+  if (invincible > 0) invincible--;
+  if (level.bamboos.every(b => b.collected)) endGame(true);
+
+  draw();
+}
+
+// ─── Drawing ─────────────────────────────────────────
+function drawPanda(x, y, dir, frame, alpha) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(x, y);
+  if (dir === -1) { ctx.scale(-1, 1); ctx.translate(-28, 0); }
+
+  ctx.fillStyle = '#FFF';
+  ctx.beginPath(); ctx.ellipse(14, 20, 13, 15, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#222'; ctx.lineWidth = 1; ctx.stroke();
+
+  ctx.fillStyle = '#FFF';
+  ctx.beginPath(); ctx.arc(14, 8, 10, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#222'; ctx.stroke();
+
+  ctx.fillStyle = '#222';
+  ctx.beginPath(); ctx.arc(6, 1, 4, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(22, 1, 4, 0, Math.PI * 2); ctx.fill();
+
+  ctx.beginPath(); ctx.ellipse(10, 7, 3.5, 3, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(18, 7, 3.5, 3, 0, 0, Math.PI * 2); ctx.fill();
+
+  ctx.fillStyle = '#FFF';
+  ctx.beginPath(); ctx.arc(10, 7, 1.5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(18, 7, 1.5, 0, Math.PI * 2); ctx.fill();
+
+  ctx.fillStyle = '#222';
+  ctx.beginPath(); ctx.arc(14, 10, 1.5, 0, Math.PI * 2); ctx.fill();
+
+  const armY = frame === 0 ? 16 : 18;
+  ctx.fillStyle = '#222';
+  ctx.beginPath(); ctx.ellipse(3,  armY, 3, 7, -0.3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(25, armY, 3, 7,  0.3, 0, Math.PI * 2); ctx.fill();
+
+  const lo = frame === 0 ? 0 : 2;
+  ctx.beginPath(); ctx.ellipse(9,  32 + lo, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(19, 32 - lo, 4, 5, 0, 0, Math.PI * 2); ctx.fill();
+
+  ctx.restore();
+}
+
+function drawBamboo(x, y) {
+  ctx.fillStyle = '#7CB342'; ctx.fillRect(x + 5, y, 6, 24);
+  ctx.fillStyle = '#558B2F';
+  ctx.fillRect(x + 5, y + 8,  6, 2);
+  ctx.fillRect(x + 5, y + 16, 6, 2);
+  ctx.fillStyle = '#AED581';
+  ctx.beginPath(); ctx.ellipse(x + 14, y + 4,  8, 4,  0.3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x + 2,  y + 10, 7, 3, -0.3, 0, Math.PI * 2); ctx.fill();
+}
+
+function drawEnemy(e) {
+  if (!e.alive) return;
+  ctx.save(); ctx.translate(e.x, e.y);
+  ctx.fillStyle = '#E53935';
+  ctx.beginPath(); ctx.ellipse(12, 16, 11, 12, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#EF5350';
+  ctx.beginPath(); ctx.arc(12, 7, 8, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#FFF';
+  ctx.beginPath(); ctx.arc(9, 6, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(15, 6, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); ctx.arc(9,  6, 1.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(15, 6, 1.2, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#B71C1C';
+  ctx.beginPath(); ctx.ellipse(7,  27, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(17, 27, 5, 3, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+function drawCloud(x, y) {
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.beginPath(); ctx.arc(x, y, 18, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x + 20, y - 5, 14, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x + 38, y, 16, 0, Math.PI * 2); ctx.fill();
+  ctx.fillRect(x - 8, y, 54, 20);
+}
+
+const clouds = [
+  {bx: 50, y: 40}, {bx: 200, y: 60}, {bx: 400, y: 35},
+  {bx: 600, y: 55}, {bx: 800, y: 40}, {bx: 1000, y: 50}
+];
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+  ctx.translate(-camera.x, 0);
+
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+  skyGrad.addColorStop(0, '#87CEEB');
+  skyGrad.addColorStop(1, '#C8E6FA');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(camera.x, 0, W, H);
+
+  clouds.forEach(c => drawCloud(c.bx, c.y));
+
+  ctx.fillStyle = '#B0BEC5';
+  for (let i = 0; i < 6; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * 180 - 50, H - 80);
+    ctx.lineTo(i * 180 + 90, H - 200);
+    ctx.lineTo(i * 180 + 220, H - 80);
+    ctx.fill();
+  }
+
+  ctx.fillStyle = '#5C4033';
+  ctx.fillRect(0, 9 * TILE + 4, MAP_W * TILE, H);
+
+  for (const pl of level.platforms) {
+    if (pl.type === 'ground') {
+      ctx.fillStyle = '#5C4033'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
+      ctx.fillStyle = '#4CAF50'; ctx.fillRect(pl.x, pl.y, pl.w, 6);
+      ctx.fillStyle = '#388E3C'; ctx.fillRect(pl.x, pl.y + 6, pl.w, 2);
+    } else {
+      ctx.fillStyle = '#8D6E63'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h);
+      ctx.fillStyle = '#A5D6A7'; ctx.fillRect(pl.x, pl.y, pl.w, 5);
+      ctx.fillStyle = '#81C784'; ctx.fillRect(pl.x + 2, pl.y + 5, pl.w - 4, 2);
+      ctx.strokeStyle = '#6D4C41'; ctx.lineWidth = 1;
+      ctx.strokeRect(pl.x + .5, pl.y + .5, pl.w - 1, pl.h - 1);
+    }
+  }
+
+  for (const b of level.bamboos) {
+    if (!b.collected) drawBamboo(b.x, b.y);
+  }
+
+  for (const e of level.enemies) drawEnemy(e);
+
+  const alpha = invincible > 0 ? (Math.floor(invincible / 6) % 2 === 0 ? 0.4 : 1) : 1;
+  drawPanda(player.x, player.y - 2, player.dir, player.frame, alpha);
+
+  ctx.restore();
+
+  const total = level.bamboos.length;
+  const collected = level.bamboos.filter(b => b.collected).length;
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fillRect(W - 120, 6, 112, 24);
+  ctx.fillStyle = '#7dff7d';
+  ctx.font = 'bold 12px Courier New';
+  ctx.textAlign = 'right';
+  ctx.fillText(collected + '/' + total + ' 🎋', W - 10, 23);
+  ctx.textAlign = 'left';
+}
+
+// ─── Game state ──────────────────────────────────────
+function endGame(win) {
+  state = 'over';
+  clearInterval(timerInterval);
+  overlay.style.display = 'flex';
+  overlay.innerHTML = win
+    ? `<h2>🎉 ¡Ganaste!</h2><p>¡Recogiste todo el bambú!<br>Puntuación: ${score}</p><button class="btn-play" id="startBtn">JUGAR DE NUEVO</button>`
+    : `<h2>💀 Game Over</h2><p>Puntuación: ${score}</p><button class="btn-play" id="startBtn">INTENTAR DE NUEVO</button>`;
+  document.getElementById('startBtn').addEventListener('click', startGame);
+}
+
+function startGame() {
+  overlay.style.display = 'none';
+  state = 'playing';
+  initGame();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    timerEl.textContent = '⏱ ' + timeLeft;
+    if (timeLeft <= 0) endGame(false);
+  }, 1000);
+
+  if (isMobile()) controlsDiv.classList.add('visible');
+}
+
+// ─── Keyboard ────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
+});
+document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+// ─── Touch controls ──────────────────────────────────
+function setupTouchBtn(id, prop) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  btn.addEventListener('touchstart', e => { e.preventDefault(); touch[prop] = true;  btn.classList.add('pressed'); },    { passive: false });
+  btn.addEventListener('touchend',   e => { e.preventDefault(); touch[prop] = false; btn.classList.remove('pressed'); }, { passive: false });
+  btn.addEventListener('mousedown',  () => { touch[prop] = true;  btn.classList.add('pressed'); });
+  btn.addEventListener('mouseup',    () => { touch[prop] = false; btn.classList.remove('pressed'); });
+}
+
+setupTouchBtn('btnLeft',  'left');
+setupTouchBtn('btnRight', 'right');
+
+// Jump is one-shot
+const jumpBtn = document.getElementById('btnJump');
+if (jumpBtn) {
+  jumpBtn.addEventListener('touchstart', e => { e.preventDefault(); touch.jump = true; jumpBtn.classList.add('pressed'); },    { passive: false });
+  jumpBtn.addEventListener('touchend',   e => { e.preventDefault(); jumpBtn.classList.remove('pressed'); }, { passive: false });
+  jumpBtn.addEventListener('mousedown',  () => { touch.jump = true; jumpBtn.classList.add('pressed'); });
+  jumpBtn.addEventListener('mouseup',    () => { jumpBtn.classList.remove('pressed'); });
+}
+
+// ─── Start ───────────────────────────────────────────
+document.getElementById('startBtn').addEventListener('click', startGame);
+animFrame = requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
