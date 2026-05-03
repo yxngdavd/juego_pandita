@@ -130,7 +130,6 @@ let score, lives, timeLeft, timerInterval, animFrame;
 let camera = { x: 0 };
 let invincible = 0;
 let currentLevel = 1;
-let checkpoint = 1; // nivel guardado al llegar a él
 let level, player;
 let seeds = []; // projectiles from shooter enemy
 let particles = [];
@@ -327,8 +326,7 @@ function buildLevel3() {
 // ─── Init ──────────────────────────────────────────────
 function initGame(lvl) {
   currentLevel = lvl;
-  if (lvl > checkpoint) checkpoint = lvl; // guardar progreso
-  score = (state === 'nextLevel') ? score : 0;
+  score = (state === 'nextLevel') ? score : 0; // carry score to level 2
   lives = (state === 'nextLevel') ? lives : 3;
   timeLeft = lvl === 1 ? 60 : (lvl === 2 ? 90 : 100);
   invincible = 0;
@@ -572,141 +570,178 @@ function showLevelComplete(lvl, nextCallback) {
 
   const nextLvlInfo = [
     null,
-    { title:'🌲 NIVEL 2: El Bosque Oscuro', desc:'¡Cuidado con las plantas que disparan semillas! 🌱' },
-    { title:'🌩️ NIVEL 3: La Tormenta Final', desc:'¡Un dragón volador lanza bolas de fuego! 🔥<br>¡Es el nivel más difícil!' },
+    { title:'🌲 NIVEL 2: El Bosque Oscuro', desc:'¡Cuidado con las\nplantas que disparan semillas! 🌱' },
+    { title:'🌩️ NIVEL 3: La Tormenta Final', desc:'¡Un dragón volador lanza\nbolas de fuego! 🔥 ¡El más difícil!' },
     null
   ];
 
-  // Canvas animado de fondo
+  // Create fullscreen canvas overlay for the cutscene (left 60% of width)
   const cs = document.createElement('canvas');
   cs.width = W; cs.height = H;
-  cs.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:auto;z-index:10;';
+  cs.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;pointer-events:none;';
   document.getElementById('gameArea').appendChild(cs);
   const cx = cs.getContext('2d');
 
-  // Panel HTML con botón encima del canvas
-  const isLast = !nextLvlInfo[lvl];
+  // Side panel with message + button (right side)
   const panel = document.createElement('div');
-  panel.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;z-index:11;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:24px;pointer-events:none;';
-  if (isLast) {
-    panel.innerHTML = '<div style="background:rgba(0,0,0,0.55);border-radius:12px;padding:14px 28px;text-align:center;pointer-events:auto;"><div style="color:#FFD54F;font-size:18px;font-weight:bold;font-family:Courier New,monospace;margin-bottom:8px;">🏆 ¡Completaste los 3 niveles!</div><div style="color:#fff;font-size:12px;font-family:Courier New,monospace;margin-bottom:12px;">Puntuación: ' + score + ' 🎋</div><button class="btn-play" id="cutsceneBtn">¡JUGAR DE NUEVO!</button></div>';
-  } else {
-    const info = nextLvlInfo[lvl];
-    panel.innerHTML = '<div style="background:rgba(0,0,0,0.55);border-radius:12px;padding:14px 28px;text-align:center;pointer-events:auto;"><div style="color:#7dff7d;font-size:13px;font-family:Courier New,monospace;margin-bottom:4px;">⚠️ ' + info.title + '</div><div style="color:#ccc;font-size:11px;font-family:Courier New,monospace;margin-bottom:12px;">' + info.desc + '</div><button class="btn-play" id="cutsceneBtn">NIVEL ' + (lvl+1) + ' →</button></div>';
-  }
+  panel.style.cssText = `
+    position:absolute;top:0;right:0;width:42%;height:100%;z-index:11;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:12px 10px;box-sizing:border-box;
+    background:linear-gradient(160deg,rgba(252,228,236,0.97),rgba(248,187,208,0.97));
+    border-left:2px solid #e91e63;
+  `;
+
+  const info = nextLvlInfo[lvl];
+  const isLast = !info;
+
+  panel.innerHTML = `
+    <div style="text-align:center;">
+      <div style="font-size:22px;font-weight:bold;color:#ad1457;font-family:'Courier New',monospace;margin-bottom:8px;line-height:1.3;">
+        🎉 ¡Nivel ${lvl}<br>Completo!
+      </div>
+      <div style="font-size:12px;color:#c2185b;font-family:'Courier New',monospace;margin-bottom:10px;">
+        Puntuación: ${score} 🎋
+      </div>
+      ${info ? `<div style="font-size:11px;color:#6a1b4d;font-family:'Courier New',monospace;margin-bottom:14px;line-height:1.5;background:rgba(255,255,255,0.5);border-radius:8px;padding:8px;">
+        <span style="color:#e65100;font-weight:bold;">⚠️ ${info.title}</span><br>
+        ${info.desc.replace(/\n/g,'<br>')}
+      </div>` : ''}
+      <button id="levelCompleteBtn" style="
+        background:#2d7a2d;color:white;border:2px solid #7dff7d;
+        padding:10px 18px;font-size:14px;font-family:'Courier New',monospace;
+        cursor:pointer;border-radius:8px;opacity:0;transition:opacity 0.4s;
+      ">${isLast ? '🏆 VER RESULTADO' : `NIVEL ${lvl+1} →`}</button>
+    </div>
+  `;
   document.getElementById('gameArea').appendChild(panel);
 
-  // Título arriba
-  const titleEl = document.createElement('div');
-  titleEl.style.cssText = 'position:absolute;top:12px;left:0;right:0;text-align:center;z-index:12;font-family:Courier New,monospace;font-size:22px;font-weight:bold;color:#ad1457;text-shadow:0 2px 6px rgba(255,255,255,0.8);pointer-events:none;';
-  titleEl.textContent = '🎉 ¡Nivel ' + lvl + ' Completo!';
-  document.getElementById('gameArea').appendChild(titleEl);
+  // Fade in button after animation is halfway
+  setTimeout(() => {
+    const btn = document.getElementById('levelCompleteBtn');
+    if (btn) btn.style.opacity = '1';
+  }, 2000);
 
-  let animId;
-  function cleanup() {
-    cancelAnimationFrame(animId);
-    cs.remove(); panel.remove(); titleEl.remove();
-  }
-
-  panel.querySelector('#cutsceneBtn').addEventListener('click', () => {
-    cleanup();
-    if (isLast) { endGame(true); } else { nextCallback(); }
+  document.getElementById('gameArea').addEventListener('click', function onPanelClick(e) {
+    const btn = document.getElementById('levelCompleteBtn');
+    if (btn && btn.contains(e.target)) {
+      document.getElementById('gameArea').removeEventListener('click', onPanelClick);
+      cs.remove();
+      panel.remove();
+      if (isLast) {
+        nextCallback();
+      } else {
+        overlay.style.display = 'none';
+        nextCallback();
+      }
+    }
   });
 
   let frame = 0;
-
-  const nextLvlInfo2 = nextLvlInfo; // alias to avoid redeclaration
+  const TOTAL = 300; // longer so animation stays visible while user reads panel
+  let animId;
 
   function drawCutscene() {
-    animId = requestAnimationFrame(drawCutscene);
     cx.clearRect(0, 0, W, H);
+    const t = Math.min(frame / 200, 1); // animation reaches full at frame 200, then loops gently
 
-    const globalT = Math.min(1, frame / 60); // entrada inicial ~1 seg
-
-    // Background — warm gradient
+    // Background — warm gradient (only left 58% to leave room for panel)
     const bg = cx.createLinearGradient(0, 0, 0, H);
     bg.addColorStop(0, '#fce4ec');
     bg.addColorStop(1, '#f8bbd0');
     cx.fillStyle = bg;
     cx.fillRect(0, 0, W, H);
 
-    // Estrellas parpadeantes
-    for (let i = 0; i < 14; i++) {
-      const sx = 30 + i * 46, sy = 18 + (i % 4) * 22;
-      const twinkle = 0.5 + 0.5 * Math.sin(frame * 0.12 + i * 1.3);
-      cx.globalAlpha = twinkle * 0.85;
-      cx.fillStyle = '#FFD700';
-      cx.beginPath(); cx.arc(sx, sy, 2 + twinkle * 1.5, 0, Math.PI*2); cx.fill();
+    // Stars twinkling
+    cx.fillStyle = 'rgba(255,220,100,0.7)';
+    for (let i = 0; i < 12; i++) {
+      const sx = 20 + i * 38, sy = 20 + (i % 3) * 30;
+      const twinkle = 0.5 + 0.5 * Math.sin(frame * 0.15 + i);
+      cx.globalAlpha = twinkle * 0.8;
+      cx.beginPath(); cx.arc(sx, sy, 2 + twinkle, 0, Math.PI*2); cx.fill();
     }
     cx.globalAlpha = 1;
 
-    // Corazones flotando en loop continuo
-    for (let h2 = 0; h2 < 10; h2++) {
-      const seed = h2 * 37;
-      const hx = 60 + (seed % (W - 120)) + Math.sin(frame * 0.04 + h2) * 12;
-      const rawY = H - 60 - ((frame * 0.6 + h2 * 30) % (H - 40));
-      cx.fillStyle = 'hsl(' + (330 + h2*12) + ',90%,62%)';
-      cx.globalAlpha = 0.75;
-      cx.font = '16px serif'; cx.textAlign = 'center';
-      cx.fillText('❤', hx, rawY);
+    // Hearts floating up
+    const numHearts = Math.floor(t * 8);
+    for (let h2 = 0; h2 < numHearts; h2++) {
+      const hx = W*0.29 - 40 + h2 * 14 + Math.sin(frame * 0.05 + h2) * 10;
+      const hy = H/2 - 20 - (frame - h2 * 10) * 0.7;
+      if (hy < 20) continue;
+      cx.fillStyle = `hsl(${340 + h2*10},90%,60%)`;
+      cx.globalAlpha = 0.8;
+      cx.font = '18px serif'; cx.textAlign = 'center';
+      cx.fillText('❤', hx, hy);
     }
     cx.globalAlpha = 1;
 
-    // Suelo
+    // Ground
     cx.fillStyle = '#a5d6a7';
     cx.fillRect(0, H - 60, W, 60);
     cx.fillStyle = '#66bb6a';
     cx.fillRect(0, H - 60, W, 8);
 
-    // Flores oscilantes
+    // Flowers decoration
     const flowerColors = ['#F48FB1','#FFE082','#CE93D8','#80DEEA'];
-    for (let f = 0; f < 16; f++) {
-      const fx = 30 + f * 38, fy = H - 55;
-      const sway = Math.sin(frame * 0.05 + f * 0.8) * 2;
+    for (let f = 0; f < 10; f++) {
+      const fx = 20 + f * 38, fy = H - 55;
       cx.fillStyle = '#66BB6A';
-      cx.fillRect(fx + sway, fy, 3, 12);
+      cx.fillRect(fx, fy, 3, 12);
       cx.fillStyle = flowerColors[f%4];
-      cx.beginPath(); cx.arc(fx + 1 + sway, fy, 5, 0, Math.PI*2); cx.fill();
+      cx.beginPath(); cx.arc(fx+1, fy, 5, 0, Math.PI*2); cx.fill();
     }
 
-    // Slide-in al inicio, luego posición fija
-    const slideIn = Math.min(1, globalT * 2);
+    // Slide-in effect: panda from left, kitty from right — centered in left 58%
+    const animW = W * 0.58;
+    const slideIn = Math.min(1, t * 2.5);
     const eased = 1 - Math.pow(1 - slideIn, 3);
-    const pandaX = -60 + eased * (W/2 - 70 + 60);
-    const kittyX = W + 60 - eased * (W + 60 - (W/2 + 10));
-    const charY = H - 125;
 
-    // Rebote de abrazo continuo
-    const hug = Math.sin(frame * 0.08) * 4;
+    const pandaTargetX = animW / 2 - 70;
+    const kittyTargetX = animW / 2 + 10;
+    const pandaX = -60 + eased * (pandaTargetX + 60);
+    const kittyX = animW + 60 - eased * (animW + 60 - kittyTargetX);
+    const charY = H - 120;
 
-    drawCutscenePanda(cx, pandaX, charY + hug, globalT);
-    drawCutsceneKitty(cx, kittyX, charY - hug * 0.5, globalT);
+    // Hug bounce — keep looping after animation ends
+    const loopT = frame / 60;
+    const hug = t > 0.4 ? Math.sin((t - 0.4) * Math.PI * 6 + loopT) * (0.3 + 0.3 * (1-t)) * 5 : 0;
 
-    // Burbuja de diálogo con efecto latido
-    if (globalT > 0.5) {
-      const bubbleAlpha = Math.min(1, (globalT - 0.5) * 3);
+    // Draw panda
+    drawCutscenePanda(cx, pandaX, charY + hug, t);
+    // Draw kitty
+    drawCutsceneKitty(cx, kittyX, charY - hug * 0.5, t);
+
+    // Speech bubble — appears after 50% done
+    if (t > 0.5) {
+      const bubbleAlpha = Math.min(1, (t - 0.5) * 4);
       cx.globalAlpha = bubbleAlpha;
-      const bx = W/2 - 10, by = charY - 82;
+      const bx = animW / 2 - 10, by = charY - 80;
       cx.fillStyle = '#fff';
       cx.strokeStyle = '#e91e63';
       cx.lineWidth = 2;
-      cx.beginPath(); cx.roundRect(bx - 130, by - 30, 260, 50, 12); cx.fill(); cx.stroke();
-      cx.fillStyle = '#fff'; cx.strokeStyle = '#e91e63';
       cx.beginPath();
-      cx.moveTo(bx + 20, by + 20); cx.lineTo(bx + 35, by + 40); cx.lineTo(bx + 5, by + 20);
+      cx.roundRect(bx - 110, by - 30, 220, 50, 12);
+      cx.fill(); cx.stroke();
+      cx.fillStyle = '#fff';
+      cx.strokeStyle = '#e91e63';
+      cx.beginPath();
+      cx.moveTo(bx + 20, by + 20);
+      cx.lineTo(bx + 35, by + 40);
+      cx.lineTo(bx + 5, by + 20);
       cx.closePath(); cx.fill(); cx.stroke();
-      const pulse = 1 + Math.sin(frame * 0.1) * 0.03;
       cx.fillStyle = '#c2185b';
-      cx.font = 'bold ' + Math.round(12 * pulse) + 'px Courier New';
+      cx.font = 'bold 11px Courier New';
       cx.textAlign = 'center';
       cx.fillText('¡Sigue así, lo estás', bx, by - 5);
-      cx.fillText('haciendo increíble! 🌟', bx, by + 15);
+      cx.fillText('haciendo increíble! 🌟', bx, by + 12);
       cx.globalAlpha = 1;
     }
 
     frame++;
+    // Keep animating indefinitely until user clicks the button
+    animId = requestAnimationFrame(drawCutscene);
   }
-  drawCutscene();
+  animId = requestAnimationFrame(drawCutscene);
 }
 
 function drawCutscenePanda(cx, x, y, t) {
@@ -782,6 +817,7 @@ function drawCutsceneKitty(cx, x, y, t) {
   cx.stroke();
   cx.restore();
 }
+
 
 
 function goToLevel2() {
@@ -1170,23 +1206,18 @@ function endGame(win) {
       <p>¡Completaste los 3 niveles!<br>Puntuación final: ${score} 🎋<br><br>
       ¡El panda y el gatito están muy orgullosos de ti! 🐼🐱</p>
       <button class="btn-play" id="startBtn">JUGAR DE NUEVO</button>`;
-    document.getElementById('startBtn').addEventListener('click', () => startGame(false));
   } else {
-    const checkpointMsg = checkpoint > 1
-      ? `<br><span style="color:#FFD54F;font-size:12px;">🔖 Checkpoint activo: Nivel ${checkpoint}</span>`
-      : '';
     overlay.innerHTML = `<h2>💀 Game Over</h2>
-      <p>Nivel ${currentLevel} — Puntuación: ${score}${checkpointMsg}</p>
-      <button class="btn-play" id="startBtn">REINTENTAR NIVEL ${checkpoint}</button>`;
-    document.getElementById('startBtn').addEventListener('click', () => startGame(true));
+      <p>Nivel ${currentLevel} — Puntuación: ${score}</p>
+      <button class="btn-play" id="startBtn">INTENTAR DE NUEVO</button>`;
   }
+  document.getElementById('startBtn').addEventListener('click', startGame);
 }
 
-function startGame(fromCheckpoint = false) {
+function startGame() {
   overlay.style.display = 'none';
   state = 'playing';
-  if (!fromCheckpoint) checkpoint = 1; // nuevo juego desde el menú: resetear
-  initGame(checkpoint);
+  initGame(1);
   clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     timeLeft--;
@@ -1224,7 +1255,7 @@ if (jumpBtn) {
 }
 
 // ─── Start ─────────────────────────────────────────────
-document.getElementById('startBtn').addEventListener('click', () => startGame(false));
+document.getElementById('startBtn').addEventListener('click', startGame);
 animFrame = requestAnimationFrame(gameLoop);
 </script>
 </body>
